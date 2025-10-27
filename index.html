@@ -1,1 +1,279 @@
-{"ip":"103.178.186.225"}
+
+<!-- ===== MAIN IP ROTATION DETECTION PAGE ===== -->
+<!doctype html>
+<html lang="bn">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>IP Rotation Detection</title>
+  <style>
+    /* Copy your existing CSS here */
+    :root{
+      --bg:#0f1724; --card:#0b1220; --muted:#9aa7b2;
+      --accent:#06b6d4; --danger:#ff6b6b;
+      --glass: rgba(255,255,255,0.04);
+      --glass-2: rgba(255,255,255,0.03);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: Inter, "Segoe UI", Roboto, Arial;
+      background:
+        radial-gradient(1000px 600px at 10% 10%, rgba(6,182,212,0.06), transparent 8%),
+        radial-gradient(800px 500px at 90% 90%, rgba(99,102,241,0.04), transparent 8%),
+        var(--bg);
+      color:#e6eef6;
+      display:flex;align-items:center;justify-content:center;
+      padding:32px;
+    }
+    .wrap{width:100%;max-width:920px;margin:auto;
+      display:grid;grid-template-columns:1fr 360px;gap:24px}
+    .card{background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));
+      border-radius:14px;padding:26px;
+      box-shadow:0 8px 30px rgba(2,6,23,0.6),inset 0 1px 0 rgba(255,255,255,0.02);
+      border:1px solid rgba(255,255,255,0.03);}
+    h1{margin:0 0 6px;font-size:20px}
+    p.lead{margin:0 0 18px;color:var(--muted);font-size:13px}
+    .ip-box{display:flex;align-items:center;justify-content:space-between;
+      gap:12px;background:linear-gradient(90deg,var(--glass),var(--glass-2));
+      padding:16px;border-radius:10px;border:1px solid rgba(255,255,255,0.02);}
+    .ip-left{display:flex;gap:14px;align-items:center}
+    .badge{background:linear-gradient(135deg,var(--accent),#7c3aed);padding:10px;
+      border-radius:10px;width:68px;height:68px;display:grid;place-items:center;
+      font-weight:700;font-size:16px;color:#021018;box-shadow:0 6px 18px rgba(6,182,212,0.12);}
+    .ip-value{font-size:20px;font-weight:700;letter-spacing:0.4px}
+    .ip-sub{font-size:12px;color:var(--muted)}
+    #status{text-align:center;margin-top:16px;padding:12px;border-radius:9px;
+      font-weight:600;font-size:14px;transition:all .25s ease}
+    #status.ok{background:rgba(34,197,94,0.12);color:#a7f3d0;border:1px solid rgba(34,197,94,0.08)}
+    #status.warn{background:rgba(239,68,68,0.08);color:var(--danger);border:1px solid rgba(239,68,68,0.06)}
+    .panel{display:flex;flex-direction:column;gap:12px}
+    .mini{font-size:13px;color:var(--muted);padding:12px;border-radius:8px;
+      background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.02);}
+    .controls{display:flex;gap:10px;margin-top:6px}
+    button{cursor:pointer;border:0;padding:10px 12px;border-radius:10px;
+      background:linear-gradient(90deg,var(--accent),#7c3aed);color:#021018;
+      font-weight:700;box-shadow:0 8px 16px rgba(12,74,110,0.08);}
+    button.ghost{background:transparent;color:var(--muted);
+      border:1px solid rgba(255,255,255,0.03);font-weight:600;box-shadow:none}
+    .log{font-size:13px;color:var(--muted);line-height:1.5;background:rgba(255,255,255,0.01);
+      padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.02);min-height:84px}
+    .pulse{animation:pulse 900ms ease}
+    @keyframes pulse{
+      0%{transform:translateY(-6px);opacity:.0}
+      60%{transform:translateY(0);opacity:1}
+      100%{transform:translateY(0);opacity:1}
+    }
+    @media(max-width:880px){
+      .wrap{grid-template-columns:1fr}
+      .badge{width:56px;height:56px;font-size:14px}
+    }
+  </style>
+</head>
+<body>
+  <!-- Copy your previous HTML body content here -->
+  <div class="wrap">
+    <!-- MAIN CARD -->
+    <div class="card">
+      <h1>IP Rotation Detection</h1>
+      <p class="lead">Rotation</p>
+      <div class="ip-box" id="ipBox">
+        <div class="ip-left">
+          <div class="badge">IP</div>
+          <div>
+            <div class="ip-value" id="ip">Loading...</div>
+            <div class="ip-sub" id="ipType">Fetching...</div>
+          </div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:12px;color:var(--muted)">Last checked</div>
+          <div id="lastChecked" style="font-weight:700">—</div>
+        </div>
+      </div>
+      <div id="status" class="ok" style="margin-top:14px;">Waiting for first check…</div>
+      <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap">
+        <button id="copyBtn">Copy IP</button>
+        <button id="muteBtn" class="ghost">Mute</button>
+        <button id="forceCheck" class="ghost">Force check</button>
+        <div style="margin-left:auto; font-size:13px; color:var(--muted)">Interval: <b id="intvLabel">5s</b></div>
+      </div>
+      <div style="margin-top:14px" class="log" id="log"></div>
+    </div>
+
+    <!-- SIDE PANEL -->
+    <div class="panel">
+      <div class="card mini">
+        <strong>How it works</strong>
+        <p style="margin:8px 0 0"> After Change Automatic Ip In 10 SEC Starting Your Work</p>
+      </div>
+      <div class="card mini">
+        <strong>Settings</strong>
+        <div style="margin-top:8px" class="controls">
+          <button id="dec">-</button>
+          <div style="display:grid;place-items:center; padding:8px 12px; border-radius:8px; background:rgba(255,255,255,0.01); color:var(--muted)" id="intvDisplay">5 sec</div>
+          <button id="inc">+</button>
+        </div>
+      </div>
+      <div class="card mini" style="text-align:center; font-size:13px">
+        <div style="margin-bottom:8px"><strong>Alarm sound</strong></div>
+        <audio id="alarm-sound" src="https://www.soundjay.com/buttons/sounds/button-5.mp3" preload="auto"></audio>
+        <div style="margin-top:8px; color:var(--muted)">Mute/unmute above.</div>
+      </div>
+      <div class="card mini" style="text-align:center; font-size:13px; color:var(--danger)">
+        <strong>⚠ Pop-ups Blocked?</strong>
+        <p style="margin:8px 0 0">
+          If sites do not open automatically,<br>
+          please allow <b>Pop-ups and Redirects</b><br>
+          from your browser settings.
+        </p>
+        <!-- NEW FEATURE -->
+        <div class="card mini">
+          <strong>Open Site on IP Change</strong>
+          <div style="margin-top:8px">
+            <label style="font-size:12px;color:var(--muted)">Trigger after changes:</label>
+            <select id="changeCount" style="margin-top:4px;padding:6px;border-radius:6px;width:100%">
+              <option value="1">1 change</option>
+              <option value="2">2 changes</option>
+              <option value="3">3 changes</option>
+              <option value="4">4 changes</option>
+              <option value="5">5 changes</option>
+            </select>
+          </div>
+          <div style="margin-top:10px">
+            <label style="font-size:12px;color:var(--muted)">Sites (max 5)</label>
+            <textarea id="siteList" rows="4" placeholder="One URL per line" style="width:100%;margin-top:6px;padding:6px;border-radius:6px"></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  // Copy your previous JS code here
+  (function(){
+    const ipEl = document.getElementById('ip');
+    const statusEl = document.getElementById('status');
+    const logEl = document.getElementById('log');
+    const ipBox = document.getElementById('ipBox');
+    const ipTypeEl = document.getElementById('ipType');
+    const lastChecked = document.getElementById('lastChecked');
+    const alarm = document.getElementById('alarm-sound');
+    const copyBtn = document.getElementById('copyBtn');
+    const muteBtn = document.getElementById('muteBtn');
+    const forceBtn = document.getElementById('forceCheck');
+    const dec = document.getElementById('dec');
+    const inc = document.getElementById('inc');
+    const intvDisplay = document.getElementById('intvDisplay');
+    const intvLabel = document.getElementById('intvLabel');
+    const changeCountEl = document.getElementById('changeCount');
+    const siteListEl = document.getElementById('siteList');
+
+    let currentIP = '';
+    let intervalSec = 5;
+    let muted = false;
+    let timer = null;
+    let changeCounter = 0;
+
+    function addLog(msg){
+      const t = new Date().toLocaleTimeString();
+      logEl.innerHTML = `<div style="margin-bottom:6px">[${t}] ${msg}</div>` + logEl.innerHTML;
+    }
+
+    async function fetchIP(){
+      try {
+        const res = await fetch('https://api.ipify.org?format=json', {cache: 'no-store'});
+        const data = await res.json();
+        return data.ip || null;
+      } catch(e){ return null; }
+    }
+
+    function setStatus(ok, text){
+      statusEl.className = ok ? 'ok' : 'warn';
+      statusEl.textContent = text;
+    }
+
+    async function checkIP(doAnimate=true){
+      const ip = await fetchIP();
+      const now = new Date();
+      lastChecked.textContent = now.toLocaleTimeString();
+
+      if (!ip){
+        setStatus(false, 'Error fetching IP (check network).');
+        addLog('Error fetching IP');
+        return;
+      }
+
+      ipTypeEl.textContent = ip.includes(':') ? 'IPv6' : 'IPv4';
+      ipEl.textContent = ip;
+
+      if (currentIP && currentIP !== ip){
+        changeCounter++;
+        setStatus(false, `Your IP has changed! (Old: ${currentIP})`);
+        addLog(`IP changed from ${currentIP} → ${ip} (Total changes: ${changeCounter})`);
+        if (!muted){
+          try{ await alarm.play(); }catch(e){}
+        }
+        if (doAnimate){
+          ipBox.classList.add('pulse');
+          setTimeout(()=> ipBox.classList.remove('pulse'), 900);
+        }
+
+        // Trigger sites open
+        const triggerCount = parseInt(changeCountEl.value,10);
+        if(changeCounter === triggerCount){
+          const sites = siteListEl.value.split('\n').map(s=>s.trim()).filter(Boolean);
+          sites.slice(0,5).forEach(url=>{
+            if(url.startsWith('http')){
+              window.open(url, '_blank', 'noopener,noreferrer');
+              addLog(`Opened site: ${url}`);
+            }
+          });
+        }
+
+      } else if (!currentIP) {
+        setStatus(true, `You are online with IP: ${ip}`);
+        addLog(`Initial IP detected: ${ip}`);
+      } else {
+        setStatus(true, `IP is stable: ${ip}`);
+      }
+
+      currentIP = ip;
+    }
+
+    function startTimer(){
+      if (timer) clearInterval(timer);
+      timer = setInterval(()=> checkIP(false), intervalSec*1000);
+      intvDisplay.textContent = `${intervalSec} sec`;
+      intvLabel.textContent = `${intervalSec}s`;
+    }
+
+    // UI bindings
+    copyBtn.addEventListener('click', ()=>{
+      if (!currentIP) return;
+      navigator.clipboard?.writeText(currentIP).then(()=> addLog(`Copied IP ${currentIP}`));
+    });
+
+    muteBtn.addEventListener('click', ()=>{
+      muted = !muted;
+      muteBtn.textContent = muted ? 'Unmute' : 'Mute';
+      muteBtn.classList.toggle('ghost');
+      addLog(muted ? 'Muted alarm.' : 'Unmuted alarm.');
+    });
+
+    forceBtn.addEventListener('click', ()=> {
+      addLog('Manual check requested.');
+      checkIP(true);
+    });
+
+    dec.addEventListener('click', ()=>{ if (intervalSec > 1) intervalSec--; startTimer(); });
+    inc.addEventListener('click', ()=>{ if (intervalSec < 60) intervalSec++; startTimer(); });
+
+    // initial
+    startTimer();
+    checkIP(true);
+  })();
+  </script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/vcd15cbe7772f49c399c6a5babf22c1241717689176015" integrity="sha512-ZpsOmlRQV6y907TI0dKBHq9Md29nnaEIPlkf84rnaERnq6zvWvPUqr2ft8M1aS28oN72PdrCzSjY4U6VaAw1EQ==" data-cf-beacon='{"rayId":"992f931b4b4d0ada","version":"2025.9.1","r":1,"token":"817fbb21a2904679ad1d083e2efb3e8b","serverTiming":{"name":{"cfExtPri":true,"cfEdge":true,"cfOrigin":true,"cfL4":true,"cfSpeedBrain":true,"cfCacheStatus":true}}}' crossorigin="anonymous"></script>
+</body>
+</html>
